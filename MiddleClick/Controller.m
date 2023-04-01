@@ -71,7 +71,6 @@ CFRunLoopSourceRef currentRunLoopSource;
   NSString* needToClickNullable = [[NSUserDefaults standardUserDefaults] valueForKey:@"needClick"];
   needToClick = needToClickNullable ? [[NSUserDefaults standardUserDefaults] boolForKey:@"needClick"] : [self getIsSystemTapToClickDisabled];
   
-  NSAutoreleasePool* pool = [NSAutoreleasePool new];
   [NSApplication sharedApplication];
   
   registerTouchCallback();
@@ -110,7 +109,7 @@ CFRunLoopSourceRef currentRunLoopSource;
   // reconifguration of Core Graphics
   CGDisplayRegisterReconfigurationCallback(displayReconfigurationCallBack, self);
   
-  [self registerMouseCallback:pool];
+  [self registerMouseCallback];
 }
 
 static void stopUnstableListeners()
@@ -124,11 +123,9 @@ static void stopUnstableListeners()
 - (void)startUnstableListeners
 {
   NSLog(@"Starting unstable listeners...");
-    
-  NSAutoreleasePool* pool = [NSAutoreleasePool new];
 
   registerTouchCallback();
-  [self registerMouseCallback:pool];
+  [self registerMouseCallback];
 }
 
 static void registerTouchCallback()
@@ -155,7 +152,7 @@ static void unregisterTouchCallback()
     }
 }
 
-- (void)registerMouseCallback:(NSAutoreleasePool*)pool
+- (void)registerMouseCallback
 {
     /// we only want to see left mouse down and left mouse up, because we only want
     /// to change that one
@@ -177,9 +174,6 @@ static void unregisterTouchCallback()
 
         // Enable the event tap.
         CGEventTapEnable(eventTap, true);
-
-        // release pool before exit
-        [pool release];
     } else {
         NSLog(@"Couldn't create event tap! Check accessibility permissions.");
         [[NSUserDefaults standardUserDefaults] setBool:1 forKey:@"NSStatusItem Visible Item-0"];
@@ -269,7 +263,6 @@ CGEventRef mouseCallback(CGEventTapProxy proxy, CGEventType type,
 int touchCallback(int device, Finger* data, int nFingers, double timestamp,
                   int frame)
 {
-  NSAutoreleasePool* pool = [NSAutoreleasePool new];
   fingersQua = [[NSUserDefaults standardUserDefaults] integerForKey:@"fingers"];
   
   if (needToClick) {
@@ -340,7 +333,6 @@ int touchCallback(int device, Finger* data, int nFingers, double timestamp,
     }
   }
   
-  [pool release];
   return 0;
 }
 
@@ -362,7 +354,7 @@ void multitouchDeviceAddedCallback(void* _controller,
   }
   
   NSLog(@"Multitouch device added, restarting...");
-  Controller* controller = (Controller*)_controller;
+  Controller* controller = (Controller*)CFBridgingRelease(_controller);
   [controller scheduleRestart:2];
 }
 
@@ -371,7 +363,7 @@ void displayReconfigurationCallBack(CGDirectDisplayID display, CGDisplayChangeSu
   if(flags & kCGDisplaySetModeFlag || flags & kCGDisplayAddFlag || flags & kCGDisplayRemoveFlag || flags & kCGDisplayDisabledFlag)
   {
     NSLog(@"Display reconfigured, restarting...");
-    Controller* controller = (Controller*)_controller;
+    Controller* controller = (Controller*)CFBridgingRelease(_controller);
     [controller scheduleRestart:2];
   }
 }
