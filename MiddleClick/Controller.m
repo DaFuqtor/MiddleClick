@@ -91,7 +91,7 @@ CFRunLoopSourceRef currentRunLoopSource;
   kern_return_t err = IOServiceAddMatchingNotification(
                                                        port, kIOFirstMatchNotification,
                                                        IOServiceMatching("AppleMultitouchDevice"), multitouchDeviceAddedCallback,
-                                                       self, &handle);
+                                                       (__bridge void *)(self), &handle);
   if (err) {
     NSLog(@"Failed to register notification for touchpad attach: %xd, will not "
           @"handle newly "
@@ -107,7 +107,7 @@ CFRunLoopSourceRef currentRunLoopSource;
   
   // when displays are reconfigured restart of the app is needed, so add a calback to the
   // reconifguration of Core Graphics
-  CGDisplayRegisterReconfigurationCallback(displayReconfigurationCallBack, self);
+  CGDisplayRegisterReconfigurationCallback(displayReconfigurationCallBack, (__bridge void * _Nullable)(self));
   
   [self registerMouseCallback];
 }
@@ -131,13 +131,13 @@ static void stopUnstableListeners()
 static void registerTouchCallback()
 {
     /// Get list of all multi touch devices
-    NSMutableArray* deviceList = (NSMutableArray*)MTDeviceCreateList(); // grab our device list
+    NSMutableArray* deviceList = (NSMutableArray*)CFBridgingRelease(MTDeviceCreateList()); // grab our device list
     currentDeviceList = deviceList;
 
     // Iterate and register callbacks for multitouch devices.
     for (int i = 0; i < [deviceList count]; i++) // iterate available devices
     {
-      registerMTDeviceCallback((MTDeviceRef)[deviceList objectAtIndex:i], touchCallback);
+      registerMTDeviceCallback((__bridge MTDeviceRef)[deviceList objectAtIndex:i], touchCallback);
     }
 }
 static void unregisterTouchCallback()
@@ -148,7 +148,7 @@ static void unregisterTouchCallback()
     // Iterate and unregister callbacks for multitouch devices.
     for (int i = 0; i < [deviceList count]; i++) // iterate available devices
     {
-      unregisterMTDeviceCallback((MTDeviceRef)[deviceList objectAtIndex:i], touchCallback);
+      unregisterMTDeviceCallback((__bridge MTDeviceRef)[deviceList objectAtIndex:i], touchCallback);
     }
 }
 
@@ -289,8 +289,7 @@ int touchCallback(int device, Finger* data, int nFingers, double timestamp,
       }
     } else if (nFingers > 0 && touchStartTime == NULL) {
       NSDate* now = [NSDate new];
-      touchStartTime = [now retain];
-      [now release];
+      touchStartTime = now;
       
       maybeMiddleClick = YES;
       middleclickX = 0.0f;

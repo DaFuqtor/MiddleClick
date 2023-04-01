@@ -6,7 +6,7 @@
 
 - (id)initWithController:(Controller*)ctrl
 {
-  [super init];
+  if (!(self = [super init])) return nil;
   myController = ctrl;
   [self setChecks];
   return self;
@@ -49,7 +49,6 @@
                         "reveal anchor \"Privacy_Accessibility\" of pane \"com.apple.preference.security\"\n"
                         "end tell"];
     [a executeAndReturnError:nil];
-    [a release];
   } else {
     NSURL* url = [NSURL
                   URLWithString:@"x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"];
@@ -157,8 +156,8 @@
     [icon setTemplate:YES];
   }
   
-  _statusItem = [[[NSStatusBar systemStatusBar]
-                  statusItemWithLength:24] retain];
+  _statusItem = [[NSStatusBar systemStatusBar]
+                  statusItemWithLength:24];
   _statusItem.behavior = NSStatusItemBehaviorRemovalAllowed;
   _statusItem.menu = menu;
   _statusItem.button.toolTip = getAppName();
@@ -166,7 +165,6 @@
 
   [self initAccessibilityPermissionStatus:menu];
   
-  [menu release];
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)sender
