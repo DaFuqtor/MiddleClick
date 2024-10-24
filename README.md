@@ -33,7 +33,7 @@ It's more than just `⌘`+click
 
 <p align="right">
 
-`In Safari` · middleclicking on a link opens it in background
+`In Safari` · middleclicking on a link opens it in the background as a new tab
 
 </p>
 
