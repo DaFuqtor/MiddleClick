@@ -47,6 +47,7 @@ float middleclickX2, middleclickY2;
 
 BOOL needToClick;
 long fingersQua;
+BOOL canBeMoreFingers;
 BOOL threeDown;
 BOOL maybeMiddleClick;
 BOOL wasThreeDown;
@@ -68,6 +69,7 @@ CFRunLoopSourceRef currentRunLoopSource;
   wasThreeDown = NO;
   
   fingersQua = [[NSUserDefaults standardUserDefaults] integerForKey:kFingersNum];
+  canBeMoreFingers = [[NSUserDefaults standardUserDefaults] boolForKey:kCanBeMoreFingers];
   
   NSString* needToClickNullable = [[NSUserDefaults standardUserDefaults] valueForKey:@"needClick"];
   needToClick = needToClickNullable ? [[NSUserDefaults standardUserDefaults] boolForKey:@"needClick"] : [self getIsSystemTapToClickDisabled];
@@ -276,7 +278,11 @@ int touchCallback(int device, Finger* data, int nFingers, double timestamp,
   float maxTimeDelta = [[NSUserDefaults standardUserDefaults] integerForKey:kMaxTimeDeltaMs] / 1000.f;
   
   if (needToClick) {
-    threeDown = nFingers == fingersQua;
+    if (canBeMoreFingers) {
+      threeDown = nFingers >= fingersQua;
+    } else {
+      threeDown = nFingers == fingersQua;
+    }
   } else {
     if (nFingers == 0) {
       NSTimeInterval elapsedTime = touchStartTime ? -[touchStartTime timeIntervalSinceNow] : 0;

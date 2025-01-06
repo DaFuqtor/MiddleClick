@@ -106,6 +106,16 @@ defaults write com.rouge41.middleClick fingers 4
 
 > Default is 3
 
+### Allow to click with more than the defined number of fingers.
+
+- This is useful if your second hand accidentally touches the touchpad. 
+
+```ps1
+defaults write com.rouge41.middleClick canBeMoreFingers true
+```
+
+> By default it is disabled = false
+
 ### Tapping preferences
 
 #### Max Distance Delta
