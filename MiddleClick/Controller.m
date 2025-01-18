@@ -164,20 +164,18 @@ static void unregisterTouchCallback(void)
 
     /// create eventTap which listens for core grpahic events with the filter
     /// specified above (so left mouse down and up again)
-    CFMachPortRef eventTap = CGEventTapCreate(
+    currentEventTap = CGEventTapCreate(
                                               kCGHIDEventTap, kCGHeadInsertEventTap, kCGEventTapOptionDefault,
                                               eventMask, mouseCallback, NULL);
-    currentEventTap = eventTap;
 
-    if (eventTap) {
+    if (currentEventTap) {
         // Add to the current run loop.
-        CFRunLoopSourceRef runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0);
-        currentRunLoopSource = runLoopSource;
-        CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource,
+        currentRunLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, currentEventTap, 0);
+        CFRunLoopAddSource(CFRunLoopGetCurrent(), currentRunLoopSource,
                            kCFRunLoopCommonModes);
 
         // Enable the event tap.
-        CGEventTapEnable(eventTap, true);
+        CGEventTapEnable(currentEventTap, true);
 
         // release pool before exit
         [pool release];
@@ -189,13 +187,22 @@ static void unregisterTouchCallback(void)
 }
 static void unregisterMouseCallback(void)
 {
-    // Remove from the current run loop.
-    if (currentRunLoopSource) {
-        CFRunLoopRemoveSource(CFRunLoopGetCurrent(), currentRunLoopSource, kCFRunLoopCommonModes);
-    }
-    // Disable the event tap.
+    // Disable the event tap first
     if (currentEventTap) {
         CGEventTapEnable(currentEventTap, false);
+    }
+    
+    // Remove and release the run loop source
+    if (currentRunLoopSource) {
+        CFRunLoopRemoveSource(CFRunLoopGetCurrent(), currentRunLoopSource, kCFRunLoopCommonModes);
+        CFRelease(currentRunLoopSource);
+        currentRunLoopSource = NULL;
+    }
+    
+    // Release the event tap
+    if (currentEventTap) {
+        CFRelease(currentEventTap);
+        currentEventTap = NULL;
     }
 }
 
